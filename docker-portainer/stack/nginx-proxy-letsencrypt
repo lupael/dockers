@@ -1,0 +1,38 @@
+version: '2'
+
+#docker network create NGINX_PROXY
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /home/cnsoluciones/nginx-proxy/certs:/etc/nginx/certs:ro
+      - /home/cnsoluciones/nginx-proxy/vhostd:/etc/nginx/vhost.d
+      - /home/cnsoluciones/nginx-proxy/html:/usr/share/nginx/html
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+    networks:
+      default:
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - /home/cnsoluciones/nginx-proxy/certs:/etc/nginx/certs:rw
+      - /home/cnsoluciones/nginx-proxy/vhostd:/etc/nginx/vhost.d
+      - /home/cnsoluciones/nginx-proxy/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      default:
+
+networks:
+  default:
+    external:
+      name: NGINX_PROXY
